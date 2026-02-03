@@ -1,1 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Neon Heart Animation</title>
+<style>
+    body {
+        margin: 0;
+        background: radial-gradient(circle at center, #120018, #000);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        overflow: hidden;
+    }
+    canvas {
+        background: transparent;
+    }
+</style>
+</head>
+<body>
 
+<canvas id="heartCanvas" width="650" height="650"></canvas>
+
+<script>
+const canvas = document.getElementById("heartCanvas");
+const ctx = canvas.getContext("2d");
+
+ctx.translate(canvas.width / 2, canvas.height / 2);
+
+let time = 0;
+
+// Heart math
+function heart(k) {
+    return 15 * Math.pow(Math.sin(k), 3);
+}
+function heart2(k) {
+    return 12 * Math.cos(k)
+         - 5 * Math.cos(2 * k)
+         - 2 * Math.cos(3 * k)
+         - Math.cos(4 * k);
+}
+
+// Spark particles
+let particles = [];
+
+function addParticles(x, y) {
+    particles.push({
+        x, y,
+        vx: (Math.random() - 0.5) * 1.5,
+        vy: (Math.random() - 0.5) * 1.5,
+        life: 40
+    });
+}
+
+function drawParticles() {
+    for (let i = particles.length - 1; i >= 0; i--) {
+        let p = particles[i];
+        ctx.fillStyle = `rgba(255,120,180,${p.life / 40})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life--;
+
+        if (p.life <= 0) particles.splice(i, 1);
+    }
+}
+
+function animate() {
+    ctx.fillStyle = "rgba(0,0,0,0.25)";
+    ctx.fillRect(-canvas.width, -canvas.height, canvas.width * 2, canvas.height * 2);
+
+    time += 0.04;
+
+    let pulse = 1 + 0.12 * Math.sin(time * 2.2);
+
+    for (let j = 0; j < 30; j++) {
+        ctx.beginPath();
+        let scale = pulse * (1 + j * 0.03);
+
+        ctx.lineWidth = 2;
+        ctx.shadowBlur = 25;
+        ctx.shadowColor = "#ff4d8d";
+
+        let gradient = ctx.createLinearGradient(0, -250, 0, 250);
+        gradient.addColorStop(0, "#ff9ad5");
+        gradient.addColorStop(0.5, "#ff2f92");
+        gradient.addColorStop(1, "#ff003c");
+        ctx.strokeStyle = gradient;
+
+        for (let i = 0; i <= 360; i++) {
+            let k = i * Math.PI / 180;
+            let x = heart(k) * scale * 10;
+            let y = -heart2(k) * scale * 10;
+
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+
+            if (i % 25 === 0) addParticles(x, y);
+        }
+        ctx.stroke();
+    }
+
+    drawParticles();
+    requestAnimationFrame(animate);
+}
+
+animate();
+</script>
+
+</body>
+</html>
